@@ -1,0 +1,27 @@
+För egen del
+
+Mall för att skapa frontend(bash):
+npx create-react-app .
+
+
+Kör blockkedjan lokalt(bash):
+cd backend
+anvil
+
+testning t.ex:
+forge test --fork-url http://127.0.0.1:8545
+
+Koppling front och smart kontrakt:
+npm install ethers
+npm install @web3modal/ethereum @web3modal/react --legacy-peer-deps
+
+npm install axios --legacy-peer-deps
+npm install crypto-js
+
+Styling:
+npm install -D tailwindcss
+npx tailwindcss init -p
+npx --ignore-existing tailwindcss init -p
+
+För Pinata API:
+npm install dotenv
