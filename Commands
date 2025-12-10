@@ -25,3 +25,5 @@ npx --ignore-existing tailwindcss init -p
 
 För Pinata API:
 npm install dotenv
+
+forge build
