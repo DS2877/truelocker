@@ -27,3 +27,10 @@ För Pinata API:
 npm install dotenv
 
 forge build
+
+.env 
+echo $PRIVATE_KEY
+echo $RPC_URL
+
+cast block-number --rpc-url $RPC_URL
+forge script script/Deploy.s.sol --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast
