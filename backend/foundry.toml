@@ -1,1 +1,2 @@
-dotenv = ".env"
+[profile.default]
+dotenv = true
