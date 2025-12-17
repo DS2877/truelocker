@@ -1,24 +1,93 @@
-.App {
+body {
+  margin: 0;
+  background: radial-gradient(circle at top, #1b1b1b, #0a0a0a);
+  font-family: "Courier New", monospace;
+  color: #e5e5e5;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vault {
+  background: linear-gradient(145deg, #111, #1f1f1f);
+  border: 2px solid #333;
+  border-radius: 12px;
+  width: 420px;
+  padding: 30px;
+  box-shadow: 0 0 40px rgba(0, 255, 200, 0.15);
+}
+
+.header {
   text-align: center;
-  max-width: 600px;
-  margin: 0 auto;
-  font-family: Arial, sans-serif;
+  margin-bottom: 25px;
 }
 
-input {
-  margin: 5px;
-  padding: 8px;
-  width: 200px;
+.header h1 {
+  margin: 0;
+  font-size: 2.2rem;
+  letter-spacing: 2px;
 }
 
-button {
-  padding: 8px 16px;
-  margin: 5px;
+.subtitle {
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+.wallet-box {
+  background: #0f0f0f;
+  border: 1px solid #333;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 25px;
+}
+
+.address {
+  font-size: 0.75rem;
+  word-break: break-all;
+  color: #7fffd4;
+}
+
+.connect-btn {
+  width: 100%;
+  padding: 10px;
+  background: #00c2a8;
+  border: none;
+  border-radius: 6px;
+  color: #000;
+  font-weight: bold;
   cursor: pointer;
 }
 
-ul {
-  text-align: left;
-  list-style-type: none;
-  padding: 0;
+.connect-btn:hover {
+  background: #00ffe0;
+}
+
+.action-box {
+  text-align: center;
+}
+
+.action-box h2 {
+  margin-bottom: 10px;
+}
+
+.disabled-btn {
+  margin-top: 15px;
+  width: 100%;
+  padding: 12px;
+  background: #222;
+  border: 1px solid #444;
+  color: #777;
+  border-radius: 6px;
+  cursor: not-allowed;
+}
+
+.footer {
+  margin-top: 30px;
+  text-align: center;
+  font-size: 0.7rem;
+  color: #666;
 }
