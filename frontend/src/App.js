@@ -4,7 +4,7 @@ import { ABI } from "./abi";
 import "./App.css";
 
 function App() {
-  // STATE
+  // === STATE ===
   const [provider, setProvider] = useState(null);
   const [signer, setSigner] = useState(null);
   const [contract, setContract] = useState(null);
@@ -16,10 +16,13 @@ function App() {
   const [cid, setCid] = useState("");
   const [hashValue, setHashValue] = useState("");
 
-  // Byt till min deployade kontraktsadress senare! (GLÖM EJ DETTA PHILIP!)
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [fileHash, setFileHash] = useState("");
+
+  // BYT TILL MIN DEPLOYADE ADRESS SENARE (GLÖM EJ DETTA PHILIP)
   const CONTRACT_ADDRESS = "ADDRESS_HERE";
 
-  //== CONNECT WALLET ===
+  // === CONNECT WALLET ===
   const connectWallet = async () => {
     if (!window.ethereum) {
       alert("Please install MetaMask");
@@ -38,14 +41,38 @@ function App() {
       setSigner(sign);
       setAccount(acct);
       setContract(cont);
-
-      console.log("Connected:", acct);
     } catch (err) {
       console.error("Wallet connection error:", err);
     }
   };
 
-  // == LOAD EVIDENCES ===
+  // === FILE SELECT ===
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setSelectedFile(file);
+    setFileHash("");
+    setHashValue("");
+  };
+
+  // === HASH FILE (SHA-256) ===
+  const generateHash = async () => {
+    if (!selectedFile) return;
+
+    const buffer = await selectedFile.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    setFileHash(hashHex);
+    setHashValue(hashHex);
+  };
+
+  // === LOAD EVIDENCE ===
   const loadEvidences = async () => {
     if (!contract) return;
 
@@ -70,14 +97,9 @@ function App() {
     }
   };
 
-  // == STORE EVIDENCE ==
+  // == STORE EVIDENCE ===
   const storeEvidence = async () => {
-    if (!contract) return;
-
-    if (!cid || !hashValue) {
-      alert("CID and Hash are required");
-      return;
-    }
+    if (!contract || !hashValue) return;
 
     try {
       const tx = await contract.storeEvidence(cid, hashValue);
@@ -85,31 +107,29 @@ function App() {
 
       setCid("");
       setHashValue("");
+      setSelectedFile(null);
+      setFileHash("");
       loadEvidences();
     } catch (err) {
       console.error("Store error:", err);
     }
   };
 
-  // load contract when ready
   useEffect(() => {
     if (contract) {
       loadEvidences();
     }
   }, [contract]);
 
-  // == UI ===
+  // === UI ===
   return (
     <div className="app">
       <div className="vault">
-
-        {/* HEADER */}
         <header className="header">
-          <h1>🔐 Truelocker</h1>
-          <p className="subtitle">Secure Evidence Vault</p>
+          <h1>🔐 TrueLocker</h1>
+          <p className="subtitle">Decentralized Evidence Vault</p>
         </header>
 
-        {/* WALLET */}
         <div className="wallet-box">
           {!account ? (
             <button className="connect-btn" onClick={connectWallet}>
@@ -117,17 +137,36 @@ function App() {
             </button>
           ) : (
             <>
-              <p><strong>Status:</strong> Connected</p>
+              <p><b>Status:</b> Connected</p>
               <p className="address">{account}</p>
-              <p><strong>Total Evidence:</strong> {evidenceCount}</p>
+              <p><b>Total Evidence:</b> {evidenceCount}</p>
             </>
           )}
         </div>
 
-        {/* EVIDENCE */}
         {account && (
           <div className="action-box">
             <h2>Store New Evidence</h2>
+
+            <input type="file" className="input" onChange={handleFileSelect} />
+
+            {selectedFile && (
+              <p>
+                <b>File:</b> {selectedFile.name} (
+                {Math.round(selectedFile.size / 1024)} KB)
+              </p>
+            )}
+
+            <button className="store-btn" onClick={generateHash}>
+              Generate Hash
+            </button>
+
+            {fileHash && (
+              <p className="hash">
+                <b>SHA-256:</b><br />
+                {fileHash}
+              </p>
+            )}
 
             <input
               className="input"
@@ -136,20 +175,16 @@ function App() {
               onChange={(e) => setCid(e.target.value)}
             />
 
-            <input
-              className="input"
-              placeholder="Hash Value"
-              value={hashValue}
-              onChange={(e) => setHashValue(e.target.value)}
-            />
-
-            <button className="store-btn" onClick={storeEvidence}>
+            <button
+              className="store-btn"
+              onClick={storeEvidence}
+              disabled={!fileHash}
+            >
               🔒 Store Evidence
             </button>
           </div>
         )}
 
-        {/* EVIDENCE List  */}
         {account && (
           <div className="list-box">
             <h2>Stored Evidence</h2>
@@ -170,7 +205,7 @@ function App() {
         )}
 
         <footer className="footer">
-          Truelocker © Integrity • Immutability • Trust
+          TrueLocker © Integrity • Immutability • Trust
         </footer>
       </div>
     </div>
