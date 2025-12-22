@@ -19,7 +19,10 @@ function App() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileHash, setFileHash] = useState("");
 
-  // BYT TILL MIN DEPLOYADE ADRESS SENARE (GLÖM EJ DETTA PHILIP)
+  const [verifyFile, setVerifyFile] = useState(null);
+  const [verifyResult, setVerifyResult] = useState(null);
+
+  //  BYT TILL MIN DEPLOYADE ADRESS (GLÖM EJ)
   const CONTRACT_ADDRESS = "ADDRESS_HERE";
 
   // === CONNECT WALLET ===
@@ -97,7 +100,7 @@ function App() {
     }
   };
 
-  // == STORE EVIDENCE ===
+  // === STORE EVIDENCE ===
   const storeEvidence = async () => {
     if (!contract || !hashValue) return;
 
@@ -112,6 +115,29 @@ function App() {
       loadEvidences();
     } catch (err) {
       console.error("Store error:", err);
+    }
+  };
+
+  // === VERIFY FILE ===
+  const verifyEvidence = async () => {
+    if (!verifyFile || evidences.length === 0) return;
+
+    const buffer = await verifyFile.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    const match = evidences.find(
+      (e) => e.hashValue.toLowerCase() === hashHex.toLowerCase()
+    );
+
+    if (match) {
+      setVerifyResult({ status: "valid", evidence: match });
+    } else {
+      setVerifyResult({ status: "invalid" });
     }
   };
 
@@ -182,6 +208,39 @@ function App() {
             >
               🔒 Store Evidence
             </button>
+          </div>
+        )}
+
+        {account && (
+          <div className="action-box">
+            <h2>Verify Evidence</h2>
+
+            <input
+              type="file"
+              className="input"
+              onChange={(e) => {
+                setVerifyFile(e.target.files[0]);
+                setVerifyResult(null);
+              }}
+            />
+
+            <button className="store-btn" onClick={verifyEvidence}>
+              Verify File
+            </button>
+
+            {verifyResult?.status === "valid" && (
+              <div className="verify valid">
+                <p>✅ Evidence verified</p>
+                <p><b>CID:</b> {verifyResult.evidence.cid}</p>
+                <p><b>Stored:</b> {verifyResult.evidence.timestamp}</p>
+              </div>
+            )}
+
+            {verifyResult?.status === "invalid" && (
+              <div className="verify invalid">
+                <p>❌ No matching evidence found</p>
+              </div>
+            )}
           </div>
         )}
 

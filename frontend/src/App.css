@@ -91,3 +91,19 @@ body {
   font-size: 0.7rem;
   color: #666;
 }
+
+.verify {
+  margin-top: 15px;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+.verify.valid {
+  background: #0f3;
+  color: #000;
+}
+
+.verify.invalid {
+  background: #f33;
+  color: #fff;
+}
