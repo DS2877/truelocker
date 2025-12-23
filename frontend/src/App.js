@@ -47,7 +47,6 @@ function App() {
   // === HASH FILE ===
   const generateHash = async () => {
     if (!selectedFile) return;
-
     const buffer = await selectedFile.arrayBuffer();
     const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -127,46 +126,51 @@ function App() {
 
   return (
     <div className="app">
-      <h1>🔐 TrueLocker</h1>
+      <div className="vault">
+        {/* ROTERANDE KASSASKÅPSHJUL */}
+        <div className="safe-dial"></div>
 
-      {!account ? (
-        <button onClick={connectWallet}>Connect Wallet</button>
-      ) : (
-        <>
-          <p><b>Connected:</b> {account}</p>
-          <p><b>Total Evidence:</b> {evidenceCount}</p>
+        <h1>🔐 TrueLocker</h1>
 
-          <h2>Store Evidence</h2>
-          <input type="file" onChange={handleFileSelect} />
-          <button onClick={generateHash}>Generate Hash</button>
-          <button onClick={uploadToIPFS}>Upload to IPFS</button>
+        {!account ? (
+          <button onClick={connectWallet}>Connect Wallet</button>
+        ) : (
+          <>
+            <p><b>Connected:</b> {account}</p>
+            <p><b>Total Evidence:</b> {evidenceCount}</p>
 
-          {fileHash && <p><b>Hash:</b> {fileHash}</p>}
-          {cid && <p><b>CID:</b> {cid}</p>}
+            <h2>Store Evidence</h2>
+            <input type="file" onChange={handleFileSelect} />
+            <button onClick={generateHash}>Generate Hash</button>
+            <button onClick={uploadToIPFS}>Upload to IPFS</button>
 
-          <button onClick={storeEvidence} disabled={!cid}>
-            Store on Blockchain
-          </button>
+            {fileHash && <p><b>Hash:</b> {fileHash}</p>}
+            {cid && <p><b>CID:</b> {cid}</p>}
 
-          <h2>Verify Evidence</h2>
-          <input type="file" onChange={(e) => setVerifyFile(e.target.files[0])} />
-          <button onClick={verifyEvidence}>Verify</button>
+            <button onClick={storeEvidence} disabled={!cid}>
+              Store on Blockchain
+            </button>
 
-          {verifyResult === false && <p>❌ No match</p>}
-          {verifyResult && <p>✅ Evidence verified</p>}
+            <h2>Verify Evidence</h2>
+            <input type="file" onChange={(e) => setVerifyFile(e.target.files[0])} />
+            <button onClick={verifyEvidence}>Verify</button>
 
-          <h2>Stored Evidence</h2>
-          {evidences.map((e, i) => (
-            <div key={i}>
-              <p><b>CID:</b> {e.cid}</p>
-              <p><b>Hash:</b> {e.hashValue}</p>
-              <p><b>Creator:</b> {e.creator}</p>
-              <p><b>Timestamp:</b> {e.timestamp}</p>
-              <hr />
-            </div>
-          ))}
-        </>
-      )}
+            {verifyResult === false && <p>❌ No match</p>}
+            {verifyResult && <p>✅ Evidence verified</p>}
+
+            <h2>Stored Evidence</h2>
+            {evidences.map((e, i) => (
+              <div key={i}>
+                <p><b>CID:</b> {e.cid}</p>
+                <p><b>Hash:</b> {e.hashValue}</p>
+                <p><b>Creator:</b> {e.creator}</p>
+                <p><b>Timestamp:</b> {e.timestamp}</p>
+                <hr />
+              </div>
+            ))}
+          </>
+        )}
+      </div>
     </div>
   );
 }
