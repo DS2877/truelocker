@@ -17,23 +17,19 @@ function App() {
   const [verifyFile, setVerifyFile] = useState(null);
   const [verifyResult, setVerifyResult] = useState(null);
 
-  // senaste deployade kontraktadress på Anvil
+    // Måste vara senaste via Anvil
   const CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 
-  // === CONNECT WALLET ===
   const connectWallet = async () => {
     if (!window.ethereum) {
       alert("Install MetaMask");
       return;
     }
-
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
       await provider.send("eth_requestAccounts", []);
-
       const signer = await provider.getSigner();
       const cont = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
-
       setAccount(await signer.getAddress());
       setContract(cont);
     } catch (err) {
@@ -41,7 +37,6 @@ function App() {
     }
   };
 
-  // === FILE SELECT ===
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -50,7 +45,6 @@ function App() {
     setCid("");
   };
 
-  // === HASH FILE ===
   const generateHash = async () => {
     if (!selectedFile) return;
     const buffer = await selectedFile.arrayBuffer();
@@ -60,13 +54,11 @@ function App() {
     setFileHash(hashHex);
   };
 
-  // === UPLOAD TO PINATA ===
   const uploadToIPFS = async () => {
     if (!selectedFile) return;
     try {
       const formData = new FormData();
       formData.append("file", selectedFile);
-
       const res = await fetch("https://api.pinata.cloud/pinning/pinFileToIPFS", {
         method: "POST",
         headers: {
@@ -75,7 +67,6 @@ function App() {
         },
         body: formData,
       });
-
       const data = await res.json();
       setCid(data.IpfsHash);
     } catch (err) {
@@ -83,13 +74,11 @@ function App() {
     }
   };
 
-  // === STORE EVIDENCE ===
   const storeEvidence = async () => {
     if (!cid || !fileHash || !contract) return;
     try {
       const tx = await contract.storeEvidence(cid, fileHash);
       await tx.wait();
-
       setSelectedFile(null);
       setFileHash("");
       setCid("");
@@ -99,13 +88,11 @@ function App() {
     }
   };
 
-  // === LOAD EVIDENCE ===
   const loadEvidences = async () => {
     if (!contract) return;
     try {
       const count = await contract.evidenceCount();
       setEvidenceCount(Number(count));
-
       const list = [];
       for (let i = 0; i < count; i++) {
         const e = await contract.getEvidence(i);
@@ -122,15 +109,12 @@ function App() {
     }
   };
 
-  // === VERIFY FILE ===
   const verifyEvidence = async () => {
     if (!verifyFile) return;
-
     const buffer = await verifyFile.arrayBuffer();
     const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-
     const match = evidences.find((e) => e.hashValue.toLowerCase() === hashHex.toLowerCase());
     setVerifyResult(match ? match : false);
   };
@@ -142,9 +126,7 @@ function App() {
   return (
     <div className="app">
       <div className="vault">
-        {/* KASSASKÅPSHJUL */}
         <div className="safe-dial"></div>
-
         <h1>🔐 TrueLocker</h1>
 
         {!account ? (
@@ -153,38 +135,55 @@ function App() {
           </button>
         ) : (
           <>
-            <p><b>Connected:</b> {account}</p>
-            <p><b>Total Evidence:</b> {evidenceCount}</p>
+            <div className="wallet-box">
+              <p><b>Connected:</b> {account}</p>
+              <p><b>Total Evidence:</b> {evidenceCount}</p>
+            </div>
 
-            <h2>Store Evidence</h2>
-            <input type="file" onChange={handleFileSelect} />
-            <button onClick={generateHash}>Generate Hash</button>
-            <button onClick={uploadToIPFS}>Upload to IPFS</button>
+            {/* === MAIN  === */}
+            <div className="main-content">
 
-            {fileHash && <p><b>Hash:</b> {fileHash}</p>}
-            {cid && <p><b>CID:</b> {cid}</p>}
-
-            <button onClick={storeEvidence} disabled={!cid}>
-              Store on Blockchain
-            </button>
-
-            <h2>Verify Evidence</h2>
-            <input type="file" onChange={(e) => { setVerifyFile(e.target.files[0]); setVerifyResult(null); }} />
-            <button onClick={verifyEvidence}>Verify</button>
-
-            {verifyResult === false && <p className="verify invalid">❌ No match</p>}
-            {verifyResult && <p className="verify valid">✅ Evidence verified: {verifyResult.cid}</p>}
-
-            <h2>Stored Evidence</h2>
-            {evidences.map((e, i) => (
-              <div key={i} className="evidence-card">
-                <p><b>CID:</b> {e.cid}</p>
-                <p><b>Hash:</b> {e.hashValue}</p>
-                <p><b>Creator:</b> {e.creator}</p>
-                <p><b>Timestamp:</b> {e.timestamp}</p>
-                <hr />
+              {/* --- STORE --- */}
+              <div className="column">
+                <div className="action-box">
+                  <h2>Store Evidence</h2>
+                  <input className="input" type="file" onChange={handleFileSelect} />
+                  <button className="store-btn" onClick={generateHash}>Generate Hash</button>
+                  <button className="store-btn" onClick={uploadToIPFS}>Upload to IPFS</button>
+                  {fileHash && <p className="hash"><b>Hash:</b> {fileHash}</p>}
+                  {cid && <p className="hash"><b>CID:</b> {cid}</p>}
+                  <button className="store-btn" onClick={storeEvidence} disabled={!cid}>Store on Blockchain</button>
+                </div>
               </div>
-            ))}
+
+              {/* --- VERIFY --- */}
+              <div className="column">
+                <div className="action-box">
+                  <h2>Verify Evidence</h2>
+                  <input className="input" type="file" onChange={(e) => { setVerifyFile(e.target.files[0]); setVerifyResult(null); }} />
+                  <button className="verify-btn" onClick={verifyEvidence}>Verify</button>
+                  {verifyResult === false && <p className="verify invalid"> No match</p>}
+                  {verifyResult && <p className="verify valid">✅ Evidence verified: {verifyResult.cid}</p>}
+                </div>
+              </div>
+
+              {/* --- STORED --- */}
+              <div className="column">
+                <div className="list-box">
+                  <h2>Stored Evidence</h2>
+                  {evidences.map((e, i) => (
+                    <div key={i} className="evidence-card">
+                      <p><b>CID:</b> {e.cid}</p>
+                      <p><b>Hash:</b> {e.hashValue}</p>
+                      <p><b>Creator:</b> {e.creator}</p>
+                      <p><b>Timestamp:</b> {e.timestamp}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+            <div className="footer"></div>
           </>
         )}
       </div>

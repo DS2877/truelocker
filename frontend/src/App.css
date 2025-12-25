@@ -4,6 +4,7 @@ body {
   background: radial-gradient(circle at top, #1b1b1b, #050505);
   font-family: "Courier New", monospace;
   color: #e5e5e5;
+  overflow-x: hidden;
 }
 
 .app {
@@ -11,61 +12,40 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 20px;
 }
 
 /* === VAULT CONTAINER === */
 .vault {
-  background: radial-gradient(circle at top, #2a2a2a, #0e0e0e);
+  background: radial-gradient(circle at top, #2a2a2a, #0a0a0a);
   border: 3px solid #444;
-  border-radius: 14px;
-  width: 460px;
-  padding: 32px;
+  border-radius: 16px;
+  width: 1000px;
+  padding: 36px;
   box-shadow:
-    inset 0 0 30px rgba(0, 0, 0, 0.85),
-    0 0 60px rgba(0, 255, 200, 0.15);
+    inset 0 0 40px rgba(0, 0, 0, 0.9),
+    0 0 80px rgba(0, 255, 180, 0.2);
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* === SECURE MODE LABEL === */
 .vault::before {
   content: "SECURE MODE • TRUELOCKER";
   position: absolute;
-  top: -14px;
+  top: -16px;
   left: 50%;
   transform: translateX(-50%);
   background: #000;
-  padding: 5px 14px;
-  border-radius: 14px;
-  font-size: 0.6rem;
+  padding: 6px 16px;
+  border-radius: 16px;
+  font-size: 0.65rem;
   color: #00ffcc;
   letter-spacing: 2px;
   border: 1px solid #00ffcc;
-  box-shadow: 0 0 12px rgba(0, 255, 200, 0.6);
-}
-
-/* === SCAN LINE === */
-@keyframes scan {
-  0% { top: -10%; opacity: 0; }
-  10% { opacity: 0.4; }
-  50% { opacity: 0.6; }
-  90% { opacity: 0.4; }
-  100% { top: 110%; opacity: 0; }
-}
-
-.vault::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  width: 100%;
-  height: 6px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    rgba(0, 255, 200, 0.4),
-    transparent
-  );
-  animation: scan 7s infinite;
+  box-shadow: 0 0 16px rgba(0, 255, 200, 0.6);
 }
 
 /* === ROTATING SAFE DIAL === */
@@ -78,28 +58,25 @@ body {
   position: absolute;
   top: 18px;
   right: 18px;
-  width: 70px;
-  height: 70px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  border: 4px solid #666;
-  background:
-    radial-gradient(circle, #444 25%, #222 26%, #111 70%);
-  box-shadow:
-    inset 0 0 10px #000,
-    0 0 15px rgba(0, 0, 0, 0.8);
+  border: 5px solid #666;
+  background: radial-gradient(circle, #444 20%, #222 25%, #111 70%);
+  box-shadow: inset 0 0 12px #000, 0 0 20px rgba(0, 0, 0, 0.8);
   animation: rotateDial 20s linear infinite;
 }
 
 .safe-dial::before {
   content: "";
   position: absolute;
-  top: 6px;
+  top: 8px;
   left: 50%;
   width: 4px;
-  height: 14px;
+  height: 18px;
   background: #00ffcc;
   transform: translateX(-50%);
-  box-shadow: 0 0 6px rgba(0, 255, 200, 0.8);
+  box-shadow: 0 0 8px rgba(0, 255, 200, 0.9);
 }
 
 /* === HEADER === */
@@ -110,7 +87,7 @@ body {
 
 .header h1 {
   margin: 0;
-  font-size: 2.3rem;
+  font-size: 2.5rem;
   letter-spacing: 3px;
 }
 
@@ -123,29 +100,39 @@ body {
 .wallet-box {
   background: linear-gradient(145deg, #0b0b0b, #151515);
   border: 1px solid #444;
-  padding: 15px;
-  border-radius: 8px;
+  padding: 16px;
+  border-radius: 10px;
   margin-bottom: 25px;
-  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.9);
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.95);
 }
 
-.address {
-  font-size: 0.7rem;
-  word-break: break-all;
-  color: #7fffd4;
+/* === MAIN CONTENT LAYOUT === */
+.main-content {
+  display: flex;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+/* === COLUMNS === */
+.column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 /* === BUTTONS === */
 @keyframes pulse {
   0% { box-shadow: 0 0 6px rgba(0, 255, 200, 0.3); }
-  50% { box-shadow: 0 0 22px rgba(0, 255, 200, 0.8); }
+  50% { box-shadow: 0 0 24px rgba(0, 255, 200, 0.8); }
   100% { box-shadow: 0 0 6px rgba(0, 255, 200, 0.3); }
 }
 
 .connect-btn,
-.store-btn {
+.store-btn,
+.verify-btn {
   width: 100%;
-  padding: 11px;
+  padding: 12px;
   background: #00c2a8;
   border: none;
   border-radius: 6px;
@@ -153,42 +140,62 @@ body {
   font-weight: bold;
   cursor: pointer;
   margin-top: 10px;
+  transition: 0.3s all;
 }
 
 .connect-btn {
-  animation: pulse 2.8s infinite;
+  animation: pulse 2.5s infinite;
 }
 
 .connect-btn:hover,
-.store-btn:hover {
+.store-btn:hover,
+.verify-btn:hover {
   background: #00ffe0;
+  transform: scale(1.02);
+  box-shadow: 0 0 18px rgba(0, 255, 200, 0.6);
 }
 
 /* === ACTION BOX === */
 .action-box {
   background: #0e0e0e;
   border: 1px solid #333;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 20px;
+  padding: 18px;
+  border-radius: 10px;
   text-align: center;
+  position: relative;
+  box-shadow: inset 0 0 15px rgba(0, 255, 200, 0.15);
+}
+
+.action-box h2 {
+  border-bottom: 1px solid #00ffcc;
+  padding-bottom: 6px;
+  margin-bottom: 12px;
+  font-size: 1rem;
+  color: #00ffcc;
 }
 
 /* === INPUTS === */
 .input {
   width: 100%;
-  padding: 8px;
+  padding: 10px;
   margin-top: 8px;
   background: #111;
   border: 1px solid #444;
   border-radius: 6px;
   color: #e5e5e5;
+  transition: 0.3s all;
+}
+
+.input:focus {
+  border-color: #00ffcc;
+  box-shadow: 0 0 12px rgba(0, 255, 200, 0.5);
+  outline: none;
 }
 
 /* === HASH DISPLAY === */
 .hash {
   margin-top: 10px;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   word-break: break-all;
   color: #00ffcc;
 }
@@ -204,37 +211,45 @@ body {
 .verify.valid {
   background: linear-gradient(145deg, #00ff99, #00cc77);
   color: #000;
-  box-shadow: 0 0 20px rgba(0, 255, 150, 0.6);
+  box-shadow: 0 0 22px rgba(0, 255, 150, 0.8);
 }
 
 .verify.invalid {
-  background: linear-gradient(145deg, #ff4444, #cc0000);
+  background: linear-gradient(145deg, #e21818, #cc0000cb);
   color: #fff;
-  box-shadow: 0 0 20px rgba(255, 50, 50, 0.6);
+  box-shadow: 0 0 22px rgba(247, 27, 27, 0.685);
 }
 
 /* === EVIDENCE LIST === */
 .list-box {
   background: #0c0c0c;
   border: 1px solid #333;
-  border-radius: 8px;
-  padding: 12px;
+  border-radius: 10px;
+  padding: 14px;
+  overflow-y: auto;
+  max-height: 400px;
 }
 
 .evidence-card {
   background: #111;
   border: 1px solid #333;
-  padding: 10px;
-  border-radius: 6px;
+  padding: 12px;
+  border-radius: 8px;
   margin-top: 8px;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
+  transition: 0.2s all;
+}
+
+.evidence-card:hover {
+  background: #1a1a1a;
+  box-shadow: 0 0 14px rgba(0, 255, 200, 0.3);
 }
 
 /* === FOOTER === */
 .footer {
   margin-top: 25px;
   text-align: center;
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   color: #666;
 }
 
