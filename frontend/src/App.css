@@ -237,3 +237,37 @@ h1 {
   text-align: center;
   color: #d4c7a1;
 }
+
+/* === VERIFY REFERENCE BOX === */
+.reference-box {
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid #5f4c24;
+}
+
+.reference-box h3 {
+  font-size: 0.8rem;
+  color: #c9a24d;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+
+.reference-item {
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 8px;
+  margin-bottom: 8px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: 0.2s all;
+}
+
+.reference-item:hover {
+  background: #1a1a1a;
+}
+
+.reference-item.active {
+  border-color: #c9a24d;
+  box-shadow: inset 0 0 10px rgba(201, 162, 77, 0.4);
+}
