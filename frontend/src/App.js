@@ -17,8 +17,8 @@ function App() {
   const [verifyFile, setVerifyFile] = useState(null);
   const [verifyResult, setVerifyResult] = useState(null);
 
-  // BYT TILL DEPLOYAD ADRESS
-  const CONTRACT_ADDRESS = "ADDRESS_HERE";
+  // senaste deployade kontraktadress på Anvil
+  const CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 
   // === CONNECT WALLET ===
   const connectWallet = async () => {
@@ -27,19 +27,25 @@ function App() {
       return;
     }
 
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    await provider.send("eth_requestAccounts", []);
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
 
-    const signer = await provider.getSigner();
-    const cont = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+      const signer = await provider.getSigner();
+      const cont = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
 
-    setAccount(await signer.getAddress());
-    setContract(cont);
+      setAccount(await signer.getAddress());
+      setContract(cont);
+    } catch (err) {
+      console.error("Wallet connection failed:", err);
+    }
   };
 
   // === FILE SELECT ===
   const handleFileSelect = (e) => {
-    setSelectedFile(e.target.files[0]);
+    const file = e.target.files[0];
+    if (!file) return;
+    setSelectedFile(file);
     setFileHash("");
     setCid("");
   };
@@ -50,61 +56,70 @@ function App() {
     const buffer = await selectedFile.arrayBuffer();
     const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+    const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
     setFileHash(hashHex);
   };
 
   // === UPLOAD TO PINATA ===
   const uploadToIPFS = async () => {
     if (!selectedFile) return;
+    try {
+      const formData = new FormData();
+      formData.append("file", selectedFile);
 
-    const formData = new FormData();
-    formData.append("file", selectedFile);
+      const res = await fetch("https://api.pinata.cloud/pinning/pinFileToIPFS", {
+        method: "POST",
+        headers: {
+          pinata_api_key: process.env.REACT_APP_PINATA_API_KEY,
+          pinata_secret_api_key: process.env.REACT_APP_PINATA_API_SECRET,
+        },
+        body: formData,
+      });
 
-    const res = await fetch("https://api.pinata.cloud/pinning/pinFileToIPFS", {
-      method: "POST",
-      headers: {
-        pinata_api_key: process.env.REACT_APP_PINATA_API_KEY,
-        pinata_secret_api_key: process.env.REACT_APP_PINATA_API_SECRET,
-      },
-      body: formData,
-    });
-
-    const data = await res.json();
-    setCid(data.IpfsHash);
+      const data = await res.json();
+      setCid(data.IpfsHash);
+    } catch (err) {
+      console.error("IPFS upload failed:", err);
+    }
   };
 
   // === STORE EVIDENCE ===
   const storeEvidence = async () => {
-    if (!cid || !fileHash) return;
+    if (!cid || !fileHash || !contract) return;
+    try {
+      const tx = await contract.storeEvidence(cid, fileHash);
+      await tx.wait();
 
-    const tx = await contract.storeEvidence(cid, fileHash);
-    await tx.wait();
-
-    setSelectedFile(null);
-    setFileHash("");
-    setCid("");
-    loadEvidences();
+      setSelectedFile(null);
+      setFileHash("");
+      setCid("");
+      loadEvidences();
+    } catch (err) {
+      console.error("Store evidence failed:", err);
+    }
   };
 
   // === LOAD EVIDENCE ===
   const loadEvidences = async () => {
     if (!contract) return;
+    try {
+      const count = await contract.evidenceCount();
+      setEvidenceCount(Number(count));
 
-    const count = await contract.evidenceCount();
-    setEvidenceCount(Number(count));
-
-    const list = [];
-    for (let i = 0; i < count; i++) {
-      const e = await contract.getEvidence(i);
-      list.push({
-        cid: e[0],
-        hashValue: e[1],
-        creator: e[2],
-        timestamp: new Date(Number(e[3]) * 1000).toLocaleString(),
-      });
+      const list = [];
+      for (let i = 0; i < count; i++) {
+        const e = await contract.getEvidence(i);
+        list.push({
+          cid: e[0],
+          hashValue: e[1],
+          creator: e[2],
+          timestamp: new Date(Number(e[3]) * 1000).toLocaleString(),
+        });
+      }
+      setEvidences(list);
+    } catch (err) {
+      console.error("Load evidence failed:", err);
     }
-    setEvidences(list);
   };
 
   // === VERIFY FILE ===
@@ -114,9 +129,9 @@ function App() {
     const buffer = await verifyFile.arrayBuffer();
     const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+    const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 
-    const match = evidences.find(e => e.hashValue === hashHex);
+    const match = evidences.find((e) => e.hashValue.toLowerCase() === hashHex.toLowerCase());
     setVerifyResult(match ? match : false);
   };
 
@@ -127,13 +142,15 @@ function App() {
   return (
     <div className="app">
       <div className="vault">
-        {/* ROTERANDE KASSASKÅPSHJUL */}
+        {/* KASSASKÅPSHJUL */}
         <div className="safe-dial"></div>
 
         <h1>🔐 TrueLocker</h1>
 
         {!account ? (
-          <button onClick={connectWallet}>Connect Wallet</button>
+          <button className="connect-btn" onClick={connectWallet}>
+            Connect Wallet
+          </button>
         ) : (
           <>
             <p><b>Connected:</b> {account}</p>
@@ -152,15 +169,15 @@ function App() {
             </button>
 
             <h2>Verify Evidence</h2>
-            <input type="file" onChange={(e) => setVerifyFile(e.target.files[0])} />
+            <input type="file" onChange={(e) => { setVerifyFile(e.target.files[0]); setVerifyResult(null); }} />
             <button onClick={verifyEvidence}>Verify</button>
 
-            {verifyResult === false && <p>❌ No match</p>}
-            {verifyResult && <p>✅ Evidence verified</p>}
+            {verifyResult === false && <p className="verify invalid">❌ No match</p>}
+            {verifyResult && <p className="verify valid">✅ Evidence verified: {verifyResult.cid}</p>}
 
             <h2>Stored Evidence</h2>
             {evidences.map((e, i) => (
-              <div key={i}>
+              <div key={i} className="evidence-card">
                 <p><b>CID:</b> {e.cid}</p>
                 <p><b>Hash:</b> {e.hashValue}</p>
                 <p><b>Creator:</b> {e.creator}</p>
