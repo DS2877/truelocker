@@ -194,7 +194,7 @@ function App() {
     if (!verifyResult) return;
 
     const content = `
-TRUSLOCKER – VERIFICATION REPORT
+TRUSTLOCKER – VERIFICATION REPORT
 
 Network: ${networkName}
 CID: ${verifyResult.cid}
@@ -220,7 +220,7 @@ Transaction: ${txHash || "N/A"}
     <div className="app">
       <div className="vault">
         <div className="safe-dial"></div>
-        <h1>🔐 TrusLocker</h1>
+        <h1>🔐 TrustLocker</h1>
 
         {networkName && <div className="network-indicator">Network: {networkName}</div>}
         {status && <div className="status-bar">{status}</div>}
