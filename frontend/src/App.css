@@ -33,7 +33,7 @@ body {
 
 /* === VAULT LABEL === */
 .vault::before {
-  content: "SECURE BANK VAULT • TRUELOCKER";
+  content: "SECURE BANK VAULT • TRUSLOCKER";
   position: absolute;
   top: -18px;
   left: 50%;
@@ -112,7 +112,7 @@ h1 {
   gap: 20px;
 }
 
-/* === ACTION / LIST BOXES === */
+/* === ACTION / LIST BOXES=== */
 .action-box,
 .list-box {
   background: linear-gradient(145deg, #161616, #0d0d0d);
@@ -148,7 +148,7 @@ h1 {
   border-color: #c9a24d;
 }
 
-/* === BUTTONS === */
+/* ===BUTTONS === */
 .connect-btn,
 .store-btn,
 .verify-btn {
@@ -197,7 +197,7 @@ h1 {
   color: #f0eaea;
 }
 
-/* === EVIDENCE LIST === */
+/* === EVIDENCE LIST == */
 .list-box {
   max-height: 420px;
   overflow-y: auto;
@@ -270,4 +270,17 @@ h1 {
 .reference-item.active {
   border-color: #c9a24d;
   box-shadow: inset 0 0 10px rgba(201, 162, 77, 0.4);
+}
+
+.info-box {
+  margin-top: 12px;
+  cursor: pointer;
+  color: #c9a24d;
+  font-size: 0.75rem;
+}
+
+.info-text {
+  font-size: 0.7rem;
+  color: #e0ded9;
+  margin-top: 6px;
 }

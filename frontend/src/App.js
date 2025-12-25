@@ -23,9 +23,6 @@ function App() {
   const [txHash, setTxHash] = useState(null);
   const [networkName, setNetworkName] = useState("");
 
-  // 🔹 NEW: selected stored evidence reference
-  const [selectedEvidence, setSelectedEvidence] = useState(null);
-
   const [activityLog, setActivityLog] = useState([]);
 
   const addLog = (text) => {
@@ -35,11 +32,14 @@ function App() {
     ]);
   };
 
+  const [showIPFS, setShowIPFS] = useState(false);
+  const [showHash, setShowHash] = useState(false);
+  const [showChain, setShowChain] = useState(false);
+
   const CONTRACT_ADDRESS = "0x1C36D580e98a940952e7b21026BE381e223eE963";
   const SEPOLIA_CHAIN_ID = 11155111n;
   const SEPOLIA_HEX = "0xaa36a7";
 
-  // === CONNECT WALLET ===
   const connectWallet = async () => {
     if (!window.ethereum) return alert("Install MetaMask");
 
@@ -69,8 +69,7 @@ function App() {
       setContract(cont);
       setStatus("Wallet connected");
       addLog("Wallet connected to Sepolia");
-    } catch (err) {
-      console.error(err);
+    } catch {
       setStatus("Wallet connection failed");
       addLog("Wallet connection failed");
     } finally {
@@ -78,7 +77,6 @@ function App() {
     }
   };
 
-  // === FILE SELECT ===
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -89,7 +87,6 @@ function App() {
     addLog(`File selected: ${file.name}`);
   };
 
-  // === HASH FILE ===
   const generateHash = async () => {
     if (!selectedFile) return;
     setIsLoading(true);
@@ -108,7 +105,6 @@ function App() {
     addLog("Hash generated");
   };
 
-  // === UPLOAD TO IPFS ===
   const uploadToIPFS = async () => {
     if (!selectedFile) return;
     setIsLoading(true);
@@ -134,7 +130,6 @@ function App() {
     addLog("File uploaded to IPFS");
   };
 
-  // === STORE EVIDENCE ===
   const storeEvidence = async () => {
     if (!cid || !fileHash || !contract) return;
     try {
@@ -146,15 +141,10 @@ function App() {
       setTxHash(tx.hash);
       await tx.wait();
 
-      setSelectedFile(null);
-      setFileHash("");
-      setCid("");
       loadEvidences();
-
       setStatus("Evidence stored");
       addLog("Evidence stored on-chain");
-    } catch (err) {
-      console.error(err);
+    } catch {
       setStatus("Transaction failed");
       addLog("Transaction failed");
     } finally {
@@ -162,7 +152,6 @@ function App() {
     }
   };
 
-  // === LOAD EVIDENCE ===
   const loadEvidences = async () => {
     if (!contract) return;
     const count = await contract.evidenceCount();
@@ -181,7 +170,6 @@ function App() {
     setEvidences(list);
   };
 
-  // === VERIFY FILE ===
   const verifyEvidence = async () => {
     if (!verifyFile) return;
     setIsLoading(true);
@@ -202,32 +190,43 @@ function App() {
     addLog(match ? "Verification success" : "Verification failed");
   };
 
+  const exportReport = () => {
+    if (!verifyResult) return;
+
+    const content = `
+TRUSLOCKER – VERIFICATION REPORT
+
+Network: ${networkName}
+CID: ${verifyResult.cid}
+Hash: ${verifyResult.hashValue}
+Timestamp: ${verifyResult.timestamp}
+Transaction: ${txHash || "N/A"}
+    `;
+
+    const blob = new Blob([content], { type: "text/plain" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "verification_report.txt";
+    link.click();
+
+    addLog("Verification report generated");
+  };
+
   useEffect(() => {
     if (contract) loadEvidences();
   }, [contract]);
-
-  const vaultLocked = !!txHash;
 
   return (
     <div className="app">
       <div className="vault">
         <div className="safe-dial"></div>
+        <h1>🔐 TrusLocker</h1>
 
-        <h1>🔐 TrueLocker</h1>
-
-        <div className={`vault-status ${vaultLocked ? "locked" : "open"}`}>
-          Vault Status: {vaultLocked ? "LOCKED" : "OPEN"}
-        </div>
-
-        {networkName && (
-          <div className="network-indicator">Network: {networkName}</div>
-        )}
+        {networkName && <div className="network-indicator">Network: {networkName}</div>}
         {status && <div className="status-bar">{status}</div>}
 
         {!account ? (
-          <button className="connect-btn" onClick={connectWallet}>
-            Connect Wallet
-          </button>
+          <button className="connect-btn" onClick={connectWallet}>Connect Wallet</button>
         ) : (
           <>
             <div className="wallet-box">
@@ -236,86 +235,42 @@ function App() {
             </div>
 
             <div className="main-content">
-              {/* STORE */}
               <div className="column">
                 <div className="action-box">
                   <h2>Store Evidence</h2>
-
                   <input className="input" type="file" onChange={handleFileSelect} />
                   <button className="store-btn" onClick={generateHash}>Generate Hash</button>
                   <button className="store-btn" onClick={uploadToIPFS} disabled={!fileHash}>Upload to IPFS</button>
                   <button className="store-btn" onClick={storeEvidence} disabled={!cid}>Store on Blockchain</button>
 
-                  <div className="store-progress">
-                    <p className={selectedFile ? "done" : ""}>File selected</p>
-                    <p className={fileHash ? "done" : ""}>Hash generated</p>
-                    <p className={cid ? "done" : ""}>Uploaded to IPFS</p>
-                    <p className={txHash ? "done" : ""}>Stored on chain</p>
-                  </div>
+                  <div className="info-box" onClick={() => setShowIPFS(!showIPFS)}>What is IPFS?</div>
+                  {showIPFS && <p className="info-text">IPFS stores files in a decentralized, content-addressed way.</p>}
 
-                  {txHash && (
-                    <p className="hash">
-                      <a
-                        href={`https://sepolia.etherscan.io/tx/${txHash}`}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        View on Etherscan ↗
-                      </a>
-                    </p>
+                  <div className="info-box" onClick={() => setShowHash(!showHash)}>Why SHA-256?</div>
+                  {showHash && <p className="info-text">SHA-256 creates a unique fingerprint of the file.</p>}
+
+                  <div className="info-box" onClick={() => setShowChain(!showChain)}>Why Blockchain?</div>
+                  {showChain && <p className="info-text">Blockchain ensures immutability and verifiable timestamps.</p>}
+                </div>
+              </div>
+
+              <div className="column">
+                <div className="action-box">
+                  <h2>Verify Evidence</h2>
+                  <input className="input" type="file" onChange={(e) => setVerifyFile(e.target.files[0])} />
+                  <button className="verify-btn" onClick={verifyEvidence}>Verify</button>
+
+                  {verifyResult && (
+                    <>
+                      <p className="verify valid">Verified</p>
+                      <button className="store-btn" onClick={exportReport}>
+                        Generate Verification Report
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
 
-              {/* VERIFY + REFERENCE */}
-              <div className="column">
-                <div className="action-box">
-                  <h2>Verify Evidence</h2>
-
-                  <input
-                    className="input"
-                    type="file"
-                    onChange={(e) => {
-                      setVerifyFile(e.target.files[0]);
-                      setVerifyResult(null);
-                      addLog("Verification file selected");
-                    }}
-                  />
-
-                  <button className="verify-btn" onClick={verifyEvidence}>
-                    Verify
-                  </button>
-
-                  {verifyResult === false && <p className="verify invalid">No match</p>}
-                  {verifyResult && <p className="verify valid">Verified</p>}
-
-                  {/* STORED EVIDENCE REFERENCE */}
-                  <div className="reference-box">
-                    <h3>Stored Evidence Reference</h3>
-
-                    {evidences.length === 0 && (
-                      <p className="hash">No evidence stored yet</p>
-                    )}
-
-                    {evidences.map((e, i) => (
-                      <div
-                        key={i}
-                        className={`reference-item ${selectedEvidence === i ? "active" : ""}`}
-                        onClick={() => {
-                          setSelectedEvidence(i);
-                          addLog(`Selected stored evidence #${i}`);
-                        }}
-                      >
-                        <p><b>ID:</b> {i}</p>
-                        <p><b>CID:</b> {e.cid.slice(0, 10)}...</p>
-                        <p><b>Time:</b> {e.timestamp}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* ACTIVITY LOG */}
               <div className="column">
                 <div className="list-box">
                   <h2>System Activity</h2>
@@ -326,6 +281,7 @@ function App() {
                   ))}
                 </div>
               </div>
+
             </div>
           </>
         )}
