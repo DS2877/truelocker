@@ -226,3 +226,14 @@ h1 {
   color: #c9a24d;
   letter-spacing: 1px;
 }
+
+.status-bar {
+  margin: 12px 0;
+  padding: 10px;
+  background: #111;
+  border: 1px solid #444;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  text-align: center;
+  color: #d4c7a1;
+}
