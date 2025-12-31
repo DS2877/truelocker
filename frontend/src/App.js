@@ -25,6 +25,9 @@ function App() {
 
   const [activityLog, setActivityLog] = useState([]);
 
+  // forgotten evidences (UI only)
+  const [forgottenCIDs, setForgottenCIDs] = useState([]);
+
   const addLog = (text) => {
     setActivityLog((prev) => [
       { text, time: new Date().toLocaleTimeString() },
@@ -39,6 +42,17 @@ function App() {
   const CONTRACT_ADDRESS = "0x1C36D580e98a940952e7b21026BE381e223eE963";
   const SEPOLIA_CHAIN_ID = 11155111n;
   const SEPOLIA_HEX = "0xaa36a7";
+
+  // === LOAD FORGOTTEN CIDS ===
+  useEffect(() => {
+    const stored = localStorage.getItem("forgottenCIDs");
+    if (stored) setForgottenCIDs(JSON.parse(stored));
+  }, []);
+
+  const saveForgottenCIDs = (list) => {
+    setForgottenCIDs(list);
+    localStorage.setItem("forgottenCIDs", JSON.stringify(list));
+  };
 
   const connectWallet = async () => {
     if (!window.ethereum) return alert("Install MetaMask");
@@ -141,7 +155,11 @@ function App() {
       setTxHash(tx.hash);
       await tx.wait();
 
-      loadEvidences();
+      const cleaned = forgottenCIDs.filter((f) => f !== cid);
+      saveForgottenCIDs(cleaned);
+
+      await loadEvidences();
+
       setStatus("Evidence stored");
       addLog("Evidence stored on-chain");
     } catch {
@@ -151,6 +169,7 @@ function App() {
       setIsLoading(false);
     }
   };
+
 
   const loadEvidences = async () => {
     if (!contract) return;
@@ -182,7 +201,12 @@ function App() {
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
 
-    const match = evidences.find((e) => e.hashValue === hashHex);
+    const match = evidences.find(
+      (e) =>
+        e.hashValue === hashHex &&
+        !forgottenCIDs.includes(e.cid)
+    );
+
     setVerifyResult(match ? match : false);
 
     setIsLoading(false);
@@ -201,7 +225,7 @@ CID: ${verifyResult.cid}
 Hash: ${verifyResult.hashValue}
 Timestamp: ${verifyResult.timestamp}
 Transaction: ${txHash || "N/A"}
-    `;
+`;
 
     const blob = new Blob([content], { type: "text/plain" });
     const link = document.createElement("a");
@@ -212,9 +236,32 @@ Transaction: ${txHash || "N/A"}
     addLog("Verification report generated");
   };
 
+  // === FORGET EVIDENCE (UI + PINATA) ===
+  const forgetEvidence = async (cid) => {
+    try {
+      await fetch(`https://api.pinata.cloud/pinning/unpin/${cid}`, {
+        method: "DELETE",
+        headers: {
+          pinata_api_key: process.env.REACT_APP_PINATA_API_KEY,
+          pinata_secret_api_key: process.env.REACT_APP_PINATA_API_SECRET,
+        },
+      });
+
+      const updated = [...forgottenCIDs, cid];
+      saveForgottenCIDs(updated);
+      addLog(`Evidence forgotten (${cid.slice(0, 8)}…)`);
+    } catch {
+      addLog("Failed to forget evidence");
+    }
+  };
+
   useEffect(() => {
     if (contract) loadEvidences();
   }, [contract]);
+
+  const visibleEvidences = evidences.filter(
+    (e) => !forgottenCIDs.includes(e.cid)
+  );
 
   return (
     <div className="app">
@@ -226,14 +273,17 @@ Transaction: ${txHash || "N/A"}
         {status && <div className="status-bar">{status}</div>}
 
         {!account ? (
-          <button className="connect-btn" onClick={connectWallet}>Connect Wallet</button>
+          <button className="connect-btn" onClick={connectWallet}>
+            Connect Wallet
+          </button>
         ) : (
           <>
             <div className="wallet-box">
               <p><b>Connected:</b> {account}</p>
-              <p><b>Total Evidence:</b> {evidenceCount}</p>
+              <p><b>Total Evidence:</b> {visibleEvidences.length}</p>
             </div>
 
+            {/* ===MAIN=== */}
             <div className="main-content">
               <div className="column">
                 <div className="action-box">
@@ -281,7 +331,34 @@ Transaction: ${txHash || "N/A"}
                   ))}
                 </div>
               </div>
+            </div>
 
+            {/* === EVIDENCE MANAGEMENT === */}
+            <div className="list-box" style={{ marginTop: "22px", opacity: 0.85 }}>
+              <h2>Stored Evidence Management</h2>
+
+              {visibleEvidences.length === 0 && (
+                <p className="hash">No stored evidence</p>
+              )}
+
+              {visibleEvidences.map((e, i) => (
+                <div key={i} className="evidence-card">
+                  <p><b>CID:</b> {e.cid.slice(0, 14)}...</p>
+                  <p><b>Time:</b> {e.timestamp}</p>
+
+                  <div
+                    className="info-box"
+                    onClick={() => forgetEvidence(e.cid)}
+                  >
+                    Forget
+                  </div>
+                </div>
+              ))}
+
+              <p className="info-text">
+                Forgotten evidence is removed from UI and unpinned from Pinata.
+                Blockchain records remain immutable.
+              </p>
             </div>
           </>
         )}
